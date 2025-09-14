@@ -7,6 +7,9 @@ import {
     addMovie,
     removeMovie,
 } from "../../../infrastructure/store/features/favs";
+import { useQueryClient } from "@tanstack/react-query";
+import { MOVIES_QUERY_KEY } from "../../../application/queries/get-movies/useGetMovies";
+import { getMovieById } from "../../../infrastructure/movies/service";
 interface MovieComponentProps {
     movie: MovieSummary;
 }
@@ -18,6 +21,14 @@ export function MovieCard({ movie }: MovieComponentProps) {
     function isMovieAdded(movie: MovieSummary) {
         return favorites.find((m: { id: number; }) => m.id === movie.id);
     }
+    const queryClient = useQueryClient();
+    const prefetch = () => {
+        queryClient.prefetchQuery({
+            queryKey: [MOVIES_QUERY_KEY, movie.id],
+            queryFn: () => getMovieById(`${movie.id}`).then(({ data }) =>
+                data),
+        });
+    };
     return (
         <Card title={movie.title}>
             <div className="movie-item">
@@ -27,7 +38,7 @@ export function MovieCard({ movie }: MovieComponentProps) {
                         alt=""
                     />
                 </div>
-                <Button type="primary">
+                <Button onMouseEnter={prefetch} type="primary">
                     <Link to={`/movie/${movie.id}`}>Ver detalhes</Link>
                 </Button>
                 {isMovieAdded(movie) ? (
